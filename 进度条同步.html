@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .demo {
+        width: 700px;
+        height: 400px;
+        padding: 10px;
+        background-color: #ccc;
+        border: 1px solid #000;
+        /* overflow: hidden; */
+        position: relative;
+    }
+
+    .scrollData {
+        color: #fff;
+        box-sizing: border-box;
+        overflow: auto;
+        padding: 10px;
+        margin-left: 200px;
+        width: 500px;
+        height: 200px;
+        background-color: rgb(67, 53, 80);
+    }
+
+    .scrollData::-webkit-scrollbar {
+        display: none;
+    }
+
+    .contentText {
+        white-space: nowrap;
+    }
+
+    .speed {
+        width: 1000px;
+        height: 10px;
+        border-radius: 5px;
+        border: 2px solid #ccc;
+        margin-top: 2px;
+        box-sizing: border-box;
+        margin-right: 5px;
+    }
+
+    .scroll {
+        padding: 30px;
+    }
+
+    .roller {
+        position: relative;
+        width: 100%;
+        height: 20px;
+        background-color: rgb(34, 20, 20);
+    }
+
+    .rollerBtn {
+        position: absolute;
+        top: calc(50% - 20px);
+        left: 0;
+        width: 20px;
+        height: 50px;
+        background-color: rgb(18, 191, 235);
+        cursor: pointer;
+    }
+</style>
+
+<body>
+    <div class="demo">
+        <div class="scrollData">
+            <div class="contentText">数据111111111111111111111111111111111111111111111111111111111111111111111111111111111
+            </div>
+            <div>
+                <div style="background-color: rgb(237, 107, 107);" class="redspeed speed"></div>
+                <div style="background-color: rgb(107, 237, 163);" class="greenspeed speed"></div>
+            </div>
+        </div>
+        <div class="scroll">
+            <div class="roller">
+                <div class="rollerBtn"></div>
+            </div>
+        </div>
+        <button id="start">开始</button>
+    </div>
+</body>
+<script>
+    let start = document.getElementById('start');
+
+    let rollerBtn = document.querySelector('.rollerBtn');
+    let roller = document.querySelector('.roller');
+
+    let scrollData = document.querySelector('.scrollData');
+    let scrollBox = document.querySelector('.scroll');
+    let timer = null;
+    let num = 0;
+    let Event = {
+        x: 0,
+        // 鼠标按下
+        onmousedown: function (e) {
+            // 获取鼠标在元素内的位置
+            x = e.clientX - rollerBtn.offsetLeft;
+            document.addEventListener('mousemove', Event.onmousemove)
+        },
+        autoMove(e, flag) {
+            let movingRatio = e / ((roller.clientWidth) - rollerBtn.clientWidth)
+            let style = window.getComputedStyle(scrollData);
+            var padding = Number(style.getPropertyValue("padding").split('px')[0]) + 1;
+            if (flag === 'e') {
+                num = e
+                rollerBtn.style.left = e + 'px';
+                scrollData.scrollLeft = (scrollData.clientWidth * movingRatio) + padding
+            } else {
+                scrollData.scrollLeft = (scrollData.clientWidth * movingRatio) + padding
+
+            }
+        },
+        // 鼠标移动
+        onmousemove: function (e) {
+            if (timer) {
+                console.log(1)
+                return
+            }
+            start.innerHTML = '开始'
+            if (e.clientX - x <= 0) {
+                rollerBtn.style.left = 0 + 'px';
+                scrollData.scrollLeft = 0;
+
+                return
+            } else if (e.clientX - x + rollerBtn.clientWidth >= roller.clientWidth) {
+                rollerBtn.style.left = roller.clientWidth - rollerBtn.clientWidth + 'px';
+                start.innerHTML = '重置'
+                return
+            }
+            Event.autoMove(e.clientX - x, 'e')
+        },
+        // 鼠标抬起
+        onmouseup: function (e) {
+            document.removeEventListener('mousemove', Event.onmousemove)
+            rollerBtn.removeEventListener('mousedown', Event.onmousedown)
+        }
+    }
+    rollerBtn.addEventListener('mousedown', function (e) {
+        Event.onmousedown(e)
+    })
+    document.addEventListener('mouseup', function (e) {
+        Event.onmouseup(e)
+    })
+
+    start.addEventListener('click', () => {
+        console.log(num, roller.clientWidth - rollerBtn.clientWidth)
+        // num + 20一般会有20px的误差
+        if (num + 30 < roller.clientWidth - rollerBtn.clientWidth) {
+            start.innerHTML = start.innerHTML === '开始' ? '暂停' : '开始'
+        }
+        if (start.innerHTML === '重置') {
+            start.innerHTML = '开始'
+            num = 0
+            rollerBtn.style.left = 0 + 'px';
+            console.log(rollerBtn.style.left)
+            scrollData.scrollLeft = 0;
+            run()
+        }
+        if (timer && start.innerHTML === '开始') {
+            clearInterval(timer)
+            timer = null
+        }
+        start.innerHTML === '暂停' && run()
+    })
+
+    function run() {
+        timer = setInterval(() => {
+            num += 1
+            if (num >= roller.clientWidth - rollerBtn.clientWidth) {
+                rollerBtn.style.left = roller.clientWidth - rollerBtn.clientWidth + 'px';
+                start.innerHTML = '重置'
+                clearInterval(timer)
+                timer = null
+            }
+            Event.autoMove(num, 't')
+            rollerBtn.style.left = num + 'px'
+        }, 10)
+    }
+</script>
+
+</html>
